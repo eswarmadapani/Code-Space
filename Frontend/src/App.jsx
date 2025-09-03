@@ -14,6 +14,15 @@ const App = () => {
   const[users,setUsers] = useState([])
   const[typing,settyping] = useState("")
   const[sidebarOpen,setSidebarOpen] = useState(false)
+  
+  const generateRoomId = () => {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    for (let i = 0; i < 8; i++) {
+      result += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    setRoomid(result);
+  }
   useEffect(()=>{
     socket.on("userJoined",(users)=>{
       console.log("Users received:", users);
@@ -138,9 +147,15 @@ const App = () => {
           </div>
 
           <div className="mt-6 text-center">
-            <p className="text-white/50 text-xs">
-              Enter a room ID to join an existing session or create a new one
+            <p className="text-white/50 text-xs mb-3">
+              Enter a room ID to join an existing session
             </p>
+            <button 
+              onClick={generateRoomId}
+              className="text-blue-400 hover:text-blue-300 text-sm font-medium underline transition-colors duration-200 hover:no-underline"
+            >
+              or create a new room
+            </button>
           </div>
         </div>
       </div>
