@@ -4,6 +4,7 @@ import { Server } from 'socket.io'
 import path from  'path'
 
 const app = express();
+app.use(express.json());
 const server = http.createServer(app);
 const io = new Server(server,{
     cors: {
@@ -18,10 +19,19 @@ io.on("connection",(socket)=>{
     let currentRoom = null;
     let currentUser = null;
     socket.on("join",({roomId,userName}) =>{
+        console.log(`User ${userName} joining room ${roomId}`);
+        
         if (currentRoom){
             socket.leave(currentRoom);
-            rooms.get(currentRoom).delete(currentUser);
-            io.to(currentRoom).emit("userJoined",Array.from(rooms.get(currentRoom)));
+            let roomUsers = rooms.get(currentRoom);
+            if (roomUsers) {
+                roomUsers.delete(currentUser);
+                if (roomUsers.size === 0) {
+                    rooms.delete(currentRoom);
+                } else {
+                    io.to(currentRoom).emit("userJoined",Array.from(roomUsers));
+                }
+            }
         }
         currentRoom = roomId
         currentUser = userName
@@ -31,10 +41,12 @@ io.on("connection",(socket)=>{
             rooms.set(roomId,new Set())
         }
         rooms.get(roomId).add(userName);
+        console.log(`Room ${roomId} users:`, Array.from(rooms.get(roomId)));
         io.to(roomId).emit("userJoined",Array.from(rooms.get(roomId)));
-        
+
     })
     socket.on("codechange",({roomId,code}) =>{
+        console.log(`Code change in room ${roomId}`);
         socket.to(roomId).emit("codeupdate",code)
     })
     socket.on("leaveRoom",({roomId})=>{
